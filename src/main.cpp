@@ -51,12 +51,12 @@ void setup()
   Serial.print("MAX31855_VERSION : ");
   Serial.println(MAX31855_VERSION);
   Serial.println();
-  delay(250);
+  delay(3000);
 
   myspi->begin();
 
   thermoCouple.begin();
-  thermoCouple.setSPIspeed(16000000);
+  thermoCouple.setSPIspeed(1000000);
 }
 
 
@@ -105,7 +105,7 @@ void loop()
   }
 
 
-  delay(1000);
+  delay(3000);
 }
 
 void printStatusMessage(int statusCode) {
