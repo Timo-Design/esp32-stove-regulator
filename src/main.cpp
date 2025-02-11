@@ -9,6 +9,8 @@
 
 #include <Arduino.h>
 #include "MAX31855.h"
+#include <map>
+#include <string>
 
 
 // read()            timing UNO   timing ESP32 |
@@ -32,6 +34,8 @@
 const int selectPin = 5;
 const int dataPin   = 19;
 const int clockPin  = 18;
+
+void printStatusMessage(int statusCode);
 
 SPIClass * myspi = new SPIClass(VSPI);
 MAX31855 thermoCouple(selectPin, myspi);
@@ -76,10 +80,11 @@ void loop()
     Serial.println(stop - start);
   
     Serial.print("stat:\t\t");
-    Serial.println(status);
+    printStatusMessage(status);
   
     uint32_t raw = thermoCouple.getRawData();
     Serial.print("raw:\t\t");
+
     uint32_t mask = 0x80000000;
     for (int i = 0; i < 32; i++)
     {
@@ -101,6 +106,35 @@ void loop()
 
 
   delay(1000);
+}
+
+void printStatusMessage(int statusCode) {
+  switch(statusCode) {
+      case 0:
+          Serial.println ("OK");
+          break;
+      case 1:
+          Serial.println ("Thermocouple open circuit - check wiring");
+          break;
+      case 2:
+          Serial.println ("Thermocouple short to GND - check wiring");
+          break;
+      case 4:
+          Serial.println ("Thermocouple short to VCC - check wiring");
+          break;
+      case 7:
+          Serial.println ("Generic error");
+          break;
+      case 128:
+          Serial.println ("No read done yet - check wiring");
+          break;
+      case 129:
+          Serial.println ("No communication - check wiring");
+          break;
+      default:
+          Serial.println ("Unknown status code");
+          break;
+  }
 }
 
 
