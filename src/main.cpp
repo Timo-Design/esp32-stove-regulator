@@ -105,7 +105,7 @@ void loop()
   }
 
 
-  delay(3000);
+  delay(1000);
 }
 
 void printStatusMessage(int statusCode) {
