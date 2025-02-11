@@ -62,31 +62,44 @@ void loop()
   int status = thermoCouple.read();
   stop = micros();
 
-  Serial.println();
-  Serial.print("time:\t\t");
-  Serial.println(stop - start);
-
-  Serial.print("stat:\t\t");
-  Serial.println(status);
-
-  uint32_t raw = thermoCouple.getRawData();
-  Serial.print("raw:\t\t");
-  uint32_t mask = 0x80000000;
-  for (int i = 0; i < 32; i++)
+  if (status == STATUS_NO_COMMUNICATION)
   {
-    if ((i > 0)  && (i % 4 == 0)) Serial.print(" ");
-    Serial.print((raw & mask) ? 1 : 0);
-    mask >>= 1;
+    Serial.println("");
+    Serial.println("---------------");
+    Serial.println("NO COMMUNICATION");
+    Serial.println("---------------");
+    Serial.println("");
+  }else{
+
+    Serial.println();
+    Serial.print("time:\t\t");
+    Serial.println(stop - start);
+  
+    Serial.print("stat:\t\t");
+    Serial.println(status);
+  
+    uint32_t raw = thermoCouple.getRawData();
+    Serial.print("raw:\t\t");
+    uint32_t mask = 0x80000000;
+    for (int i = 0; i < 32; i++)
+    {
+      if ((i > 0)  && (i % 4 == 0)) Serial.print(" ");
+      Serial.print((raw & mask) ? 1 : 0);
+      mask >>= 1;
+    }
+    Serial.println();
+  
+    float internal = thermoCouple.getInternal();
+    Serial.print("internal:\t");
+    Serial.println(internal, 3);
+  
+    float temp = thermoCouple.getTemperature();
+    Serial.print("temperature:\t");
+    Serial.println(temp, 3);
+
   }
-  Serial.println();
 
-  float internal = thermoCouple.getInternal();
-  Serial.print("internal:\t");
-  Serial.println(internal, 3);
 
-  float temp = thermoCouple.getTemperature();
-  Serial.print("temperature:\t");
-  Serial.println(temp, 3);
   delay(1000);
 }
 
