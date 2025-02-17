@@ -5,7 +5,10 @@
 // PURPOSE: thermocouple lib demo application
 //    DATE: 2021-08-11
 //     URL: https://github.com/RobTillaart/MAX31855_RT
-//
+
+
+// YouTube: https://www.youtube.com/watch?v=1xHdYEeETiM&t=942s
+
 
 #include <Arduino.h>
 #include "MAX31855.h"
@@ -34,6 +37,10 @@
 const int selectPin = 5;
 const int dataPin   = 19;
 const int clockPin  = 18;
+
+const int avgCount = 10;
+
+int averageTemp = 0;
 
 void printStatusMessage(int statusCode);
 
@@ -97,10 +104,23 @@ void loop()
     float internal = thermoCouple.getInternal();
     Serial.print("internal:\t");
     Serial.println(internal, 3);
+
+
   
     float temp = thermoCouple.getTemperature();
     Serial.print("temperature:\t");
     Serial.println(temp, 3);
+
+    int tempC = static_cast<int>(round(temp));
+
+    if(averageTemp == 0){
+      averageTemp = tempC;
+    }else{
+      averageTemp = (averageTemp * (avgCount - 1) + tempC) / avgCount;
+      Serial.print("average temp:\t");
+      Serial.println(averageTemp);
+    }
+
 
   }
 
