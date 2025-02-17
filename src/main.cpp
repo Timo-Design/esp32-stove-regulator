@@ -16,6 +16,7 @@
 #include <string>
 
 
+
 // read()            timing UNO   timing ESP32 |
 //---------------------------------------------
 // HWSPI  16000000   ~68  us      ~16 us
@@ -38,9 +39,12 @@ const int selectPin = 5;
 const int dataPin   = 19;
 const int clockPin  = 18;
 
-const int avgCount = 10;
+const int avgCount = 2;
 
 int averageTemp = 0;
+
+int minTemp = 0;
+int maxTemp = 0;
 
 void printStatusMessage(int statusCode);
 
@@ -49,6 +53,11 @@ MAX31855 thermoCouple(selectPin, myspi);
 //  MAX31855 thermoCouple(selectPin, dataPin, clockPin);  //  SW SPI to test
 
 uint32_t start, stop;
+
+// OutPut
+const byte led_gpio = 15;
+
+
 
 
 void setup()
@@ -64,6 +73,10 @@ void setup()
 
   thermoCouple.begin();
   thermoCouple.setSPIspeed(1000000);
+
+  //Setup the output
+  pinMode(led_gpio, OUTPUT);
+
 }
 
 
@@ -82,28 +95,28 @@ void loop()
     Serial.println("");
   }else{
 
-    Serial.println();
-    Serial.print("time:\t\t");
-    Serial.println(stop - start);
+    Serial.println("------------------------------");
+    // Serial.print("time:\t\t");
+    // Serial.println(stop - start);
   
     Serial.print("stat:\t\t");
     printStatusMessage(status);
   
-    uint32_t raw = thermoCouple.getRawData();
-    Serial.print("raw:\t\t");
+    // uint32_t raw = thermoCouple.getRawData();
+    // Serial.print("raw:\t\t");
 
-    uint32_t mask = 0x80000000;
-    for (int i = 0; i < 32; i++)
-    {
-      if ((i > 0)  && (i % 4 == 0)) Serial.print(" ");
-      Serial.print((raw & mask) ? 1 : 0);
-      mask >>= 1;
-    }
-    Serial.println();
+    // uint32_t mask = 0x80000000;
+    // for (int i = 0; i < 32; i++)
+    // {
+    //   if ((i > 0)  && (i % 4 == 0)) Serial.print(" ");
+    //   Serial.print((raw & mask) ? 1 : 0);
+    //   mask >>= 1;
+    // }
+
   
-    float internal = thermoCouple.getInternal();
-    Serial.print("internal:\t");
-    Serial.println(internal, 3);
+   // float internal = thermoCouple.getInternal();
+   // Serial.print("internal:\t");
+   // Serial.println(internal, 3);
 
 
   
@@ -114,16 +127,49 @@ void loop()
     int tempC = static_cast<int>(round(temp));
 
     if(averageTemp == 0){
+      // First value
       averageTemp = tempC;
+      minTemp = tempC;
     }else{
       averageTemp = (averageTemp * (avgCount - 1) + tempC) / avgCount;
       Serial.print("average temp:\t");
       Serial.println(averageTemp);
     }
 
+    if (tempC < minTemp) {
+      minTemp = tempC;
+    }
+
+    if (tempC > maxTemp) {
+      maxTemp = tempC;
+    }
+
+
+    Serial.print("min/max:\t");
+    Serial.print(minTemp);
+    Serial.print(" - ");
+    Serial.println(maxTemp);
 
   }
 
+  // Speed calculations
+  int tempOffset = 30;
+  int tempMax = 60;
+  int tempMultiply = 2;
+  int speed = 0;
+  
+  speed = (averageTemp - tempOffset) * tempMultiply;
+  if (speed < 0){
+    speed = 0;
+  }
+  if(speed > 255){
+    speed = 255;
+  }
+
+  Serial.print("speed:\t");
+    Serial.println(speed);
+
+  analogWrite(led_gpio, speed);
 
   delay(1000);
 }
@@ -156,6 +202,8 @@ void printStatusMessage(int statusCode) {
           break;
   }
 }
+
+
 
 
 //  -- END OF FILE --
