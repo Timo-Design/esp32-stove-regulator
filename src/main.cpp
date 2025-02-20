@@ -171,12 +171,13 @@ void loop()
     lcd.print(deg);
     lcd.print("C");
 
-    lcd.setCursor(0,1);
+    lcd.setCursor(8,0);
     lcd.print("min:");
     lcd.print(minTemp);
     lcd.print(deg);
     lcd.print("C");
-    lcd.print(" max:");
+    lcd.setCursor(8,1);
+    lcd.print("max:");
     lcd.print(maxTemp);
     lcd.print(deg);
     lcd.print("C");
