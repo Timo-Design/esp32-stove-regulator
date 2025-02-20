@@ -14,6 +14,8 @@
 #include "MAX31855.h"
 #include <map>
 #include <string>
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
 
 
 
@@ -46,6 +48,8 @@ int averageTemp = 0;
 int minTemp = 0;
 int maxTemp = 0;
 
+bool tempChanged = false;
+
 void printStatusMessage(int statusCode);
 
 SPIClass * myspi = new SPIClass(VSPI);
@@ -57,8 +61,9 @@ uint32_t start, stop;
 // OutPut
 const byte led_gpio = 15;
 
+const char deg = (char)223;
 
-
+LiquidCrystal_I2C lcd(0x27,16,2);  // set the LCD address to 0x27 for a 16 chars and 2 line display
 
 void setup()
 {
@@ -73,6 +78,11 @@ void setup()
 
   thermoCouple.begin();
   thermoCouple.setSPIspeed(1000000);
+
+  // LCD
+  lcd.init();                      // initialize the lcd 
+  lcd.backlight();
+  lcd.clear();
 
   //Setup the output
   pinMode(led_gpio, OUTPUT);
@@ -93,6 +103,9 @@ void loop()
     Serial.println("NO COMMUNICATION");
     Serial.println("---------------");
     Serial.println("");
+
+    lcd.clear();
+    lcd.print("NO COMMUNICATION");
   }else{
 
     Serial.println("------------------------------");
@@ -130,26 +143,47 @@ void loop()
       // First value
       averageTemp = tempC;
       minTemp = tempC;
+      tempChanged = true;
     }else{
-      averageTemp = (averageTemp * (avgCount - 1) + tempC) / avgCount;
-      Serial.print("average temp:\t");
-      Serial.println(averageTemp);
+      int newAvTemp = (averageTemp * (avgCount - 1) + tempC) / avgCount;
+
+      if(newAvTemp != averageTemp){
+        tempChanged = true;
+      }
+      averageTemp = newAvTemp;
     }
 
     if (tempC < minTemp) {
       minTemp = tempC;
+      tempChanged = true;
     }
 
     if (tempC > maxTemp) {
       maxTemp = tempC;
+      tempChanged = true;
     }
 
+    if(tempChanged){
+    lcd.clear();
+    delay(300);
+   
+    lcd.print(averageTemp);
+    lcd.print(deg);
+    lcd.print("C");
 
-    Serial.print("min/max:\t");
-    Serial.print(minTemp);
-    Serial.print(" - ");
-    Serial.println(maxTemp);
+    lcd.setCursor(0,1);
+    lcd.print("min:");
+    lcd.print(minTemp);
+    lcd.print(deg);
+    lcd.print("C");
+    lcd.print(" max:");
+    lcd.print(maxTemp);
+    lcd.print(deg);
+    lcd.print("C");
+  }
 
+    tempChanged = false;
+    
   }
 
   // Speed calculations
@@ -171,7 +205,7 @@ void loop()
 
   analogWrite(led_gpio, speed);
 
-  delay(1000);
+  delay(2000);
 }
 
 void printStatusMessage(int statusCode) {
